@@ -1,0 +1,59 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title>Universal Analytics Demo</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <div data-bind ="ifnot:uaInitialized">
+        <div class="input-group"><label>GTM Id<input type="text" data-bind="value:GtmId" /></label></div>
+        <div class="input-group"><label>Layer<input type="text" data-bind="value:dataLayer" /></label></div>
+        <button data-bind="click:initGtm">load gtm</button>
+    </div>
+    <div class="container-fluid" >
+        <div class="row">
+            <div class="col-md-6" data-bind="ifnot:uaInitialized">
+                <ul data-bind="foreach:custom">
+                    <li><input data-bind="value:name" />:<input data-bind="value:value" /></li>
+                </ul>
+                <h1>manual ua interaction</h1>
+                <button data-bind="click:impression">trigger impressions</button>
+                <fieldset>
+                    <legend>products</legend>
+                    <ul data-bind="foreach: products" class="list-group">
+                        <li class="list-group-item">
+                            <span data-bind="text:name"></span>
+                            &nbsp;<a href="javascript:void 0" data-bind="click:$parent.clickProduct" class="btn">clickProduct (<span data-bind="text:_clickCount"></span>)</a>
+                            &nbsp;<a href="javascript:void 0" data-bind="click:$parent.productDetailView" class="btn">product detail view</a>
+                            &nbsp;<a href="javascript:void 0" data-bind="click:$parent.addToCart" class="btn">add to cart</a>
+                        </li>
+                    </ul>
+                </fieldset>
+                <button data-bind="click:purchase">trigger purchase</button>
+            </div>
+            <div class="col-md-6">
+                <h1>tag manager interaction</h1>
+
+            </div>
+        </div>
+
+    </div>
+    <a href="https://developers.google.com/tag-manager/enhanced-ecommerce#data-layer">enhanced ecom developer guide</a>
+    <script id="ua-startup" type="text/plain">
+    //Google Tag Manager
+    (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='{1}'?'&l='+l:'';j.async=true;j.src=
+    '//www.googletagmanager.com/gtm.js?zen=4&id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','{1}','{0}');
+        console.log('initialized');
+    // End Google Tag Manager -->
+    </script>
+
+    <script src="//ajax.aspnetcdn.com/ajax/knockout/knockout-3.1.0.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/knockout.mapping/2.4.1/knockout.mapping.min.js"></script>
+    <script src="ua-demo.js"></script>
+</body>
+</html>
