@@ -10,28 +10,37 @@
     <div data-bind ="ifnot:uaInitialized">
         <div class="input-group"><label>GTM Id<input type="text" data-bind="value:GtmId" /></label></div>
         <div class="input-group"><label>Layer<input type="text" data-bind="value:dataLayer" /></label></div>
+        <ul data-bind="foreach:custom">
+            <li><input data-bind="value:name" />:<input data-bind="value:value" /></li>
+        </ul>
         <button data-bind="click:initGtm">load gtm</button>
     </div>
     <div class="container-fluid" >
         <div class="row">
             <div class="col-md-6" data-bind="ifnot:uaInitialized">
-                <ul data-bind="foreach:custom">
-                    <li><input data-bind="value:name" />:<input data-bind="value:value" /></li>
-                </ul>
+                
                 <h1>manual ua interaction</h1>
-                <button data-bind="click:impression">trigger impressions</button>
-                <fieldset>
+                
+                <fieldset >
                     <legend>products</legend>
                     <ul data-bind="foreach: products" class="list-group">
                         <li class="list-group-item">
                             <span data-bind="text:name"></span>
-                            &nbsp;<a href="javascript:void 0" data-bind="click:$parent.clickProduct" class="btn">clickProduct (<span data-bind="text:_clickCount"></span>)</a>
-                            &nbsp;<a href="javascript:void 0" data-bind="click:$parent.productDetailView" class="btn">product detail view</a>
-                            &nbsp;<a href="javascript:void 0" data-bind="click:$parent.addToCart" class="btn">add to cart</a>
+                            &nbsp;<a href="javascript:void 0" data-bind="click:$parent.gtm.clickProduct" class="btn">clickProduct (<span data-bind="text:_clickCount"></span>)</a>
+                            &nbsp;<a href="javascript:void 0" data-bind="click:$parent.gtm.productDetailView" class="btn">product detail view</a>
+                            &nbsp;<a href="javascript:void 0" data-bind="click:$parent.gtm.addToCart" class="btn">add to cart</a>
                         </li>
                     </ul>
                 </fieldset>
+                <!-- ko with:gtm-->
+                <button data-bind="click:impression">trigger impressions</button>
+                <button data-bind="click:checkout">trigger checkout</button>
                 <button data-bind="click:purchase">trigger purchase</button>
+                <!-- /ko -->
+                <h3>dataLayer</span></h3>
+                <ul data-bind="foreach:$root.dataLayerJson">
+                    <li><code data-bind="text:$data"></code></li>
+                </ul>
             </div>
             <div class="col-md-6">
                 <h1>tag manager interaction</h1>

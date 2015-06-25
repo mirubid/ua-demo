@@ -41,7 +41,8 @@
         uaInitialized: ko.observable(false),
         initGtm: function () {
             console.log('initGtm');
-            if (!ko.unwrap(vm.GtmId)) { return;}
+            if (!ko.unwrap(vm.GtmId)) { return; }
+            customize(vm.gtm.payload);
             var rx = new RegExp('\\{1}','g');
             var js = document.getElementById('ua-startup').text
                 .replace('{0}', ko.unwrap(vm.GtmId))
@@ -50,80 +51,15 @@
             vm.uaInitialized(true);
             localStorage['gtm-id'] = ko.unwrap(vm.GtmId);
         },
-        gtm: {
-            impression: function () {
-
-                var payload = {
-                    'ecommerce': {
-                        'currencyCode': 'USD',
-                        'impressions': ko.utils.arrayMap(ko.toJS(ko.unwrap(vm.products)), function (v, i) { v.position = i; return v; })
-                    }
-                };
-                customize(payload);
-                push(payload);
-
-            },
-            clickProduct: function (product) {
-                console.log('click', this, arguments);
-
-                var payload = makePayload('click', {
-                    'actionField': { 'list': 'Premium Lister' },      // Optional list property.
-                    'products': [ko.toJS(product)]
-                });
-                payload.event = 'productClick';
-                payload.eventCallback = function () {
-
-                    product._clickCount(product._clickCount() + 1);
-
-                    console.log('productClick callback');
-                };
-
-                push(payload);
-            },
-            productDetailView: function (product) {
-                console.log('detail');
-                var payload = makePayload('detail', {
-                    'actionField': { 'list': 'Premium Lister' },      // Optional list property.
-                    'products': [ko.toJS(product)]
-                });
-                push(payload);
-            },
-            addToCart: function (product) {
-                console.log('addToCart');
-                var payload = makePayload('add', {
-                    'products': [ko.toJS(product)]
-                });
-                payload.event = 'addToCart';
-                push(payload);
-            },
-            purchase: function () {
-                console.log('purchase');
-                var payload = makePayload('purchase', {
-                    'actionField': { 'id': 'T' + Math.random(), 'affiliation': 'Online Store', 'revenue': '35.00', 'tax': '3.00', 'shipping': '0.00' },
-                    'products': ko.toJS(ko.unwrap(vm.products))
-                });
-
-                push(payload);
-            }
-        },
+        
         ga: {
 
         }
     };
-    function push(payload) {
-        var dl = window[ko.unwrap(vm.dataLayer)];
-        console.log(payload);
-        dl.push(payload);
+    function dl() {
+        return window[ko.unwrap(vm.dataLayer)];
     }
-    function makePayload(eventName, eventData) {
-        var data = {};
-        data[eventName] = eventData;
-        data.currencyCode = 'USD';
 
-        return customize({
-            'ecommerce': data
-        });
-    }
     function customize(payload) {
         ko.utils.arrayForEach(ko.unwrap(vm.custom), function (v, i) { payload[v.name] = v.value; });
         return payload;
@@ -135,10 +71,67 @@
         var f = document.getElementsByTagName(s)[0];
         f.parentNode.insertBefore(el, f)
     }
+    function gtmAction(name) {
+        console.log('action+=' + name);
+        if (!vm.gtm.payload[name]) {
+            vm.gtm.payload[name] = { products: [] };
+        }
+    }
+    vm.gtm = {
+        payload: { eventCallback: function () { console.log('payload eventCallback'); }},
+        impression: function () {
+
+            vm.gtm.payload.impressions = ko.utils.arrayMap(ko.toJS(ko.unwrap(vm.products)), function (v, i) { v.position = i; return v; });
+
+            vm.gtm.inc();
+        },
+        clickProduct: function (product) {
+            
+            gtmAction('click');
+
+            vm.gtm.payload.click.products.push(ko.toJS(product));
+
+            dataLayer.push({ 'event': 'productClick' });
+            vm.gtm.inc();
+        },
+        productDetailView: function (product) {
+            
+            gtmAction('detail');
+            vm.gtm.payload.detail.products.push(ko.toJS(product));
+            vm.gtm.inc();
+        },
+        addToCart: function (product) {
+            
+            gtmAction('add');            
+
+            vm.gtm.payload.add.products.push(ko.toJS(product));
+            dataLayer.push({ 'event': 'addToCart' });
+            vm.gtm.inc();
+        },
+        checkout:function(){
+            gtmAction('checkout');
+            vm.gtm.payload.checkout.products = ko.toJS(ko.unwrap(vm.products))
+            vm.gtm.inc();
+        },
+        purchase: function () {
+            gtmAction('purchase');
+
+            vm.gtm.payload.purchase.products = ko.toJS(ko.unwrap(vm.products))
+            vm.gtm.inc();
+        },
+        inc: function () { vm.gtm.count(vm.gtm.count()+1); },
+        count: ko.observable(0)
+    };
+    vm.dataLayerJson = ko.computed(function () {
+        var c = vm.gtm.count();// just to make this update when something changes
+        return ko.utils.arrayMap( dataLayer,function(v){return JSON.stringify(v);});
+    });
     vm.products =ko.mapping.fromJS(products);
     ko.utils.arrayForEach(ko.unwrap(vm.products), function (v) { v._clickCount = ko.observable(0);});
     vm.custom = custom;
     window.vm = vm;
     console.log(vm);
+    dataLayer.push({ "ecommerce": vm.gtm.payload });
     ko.applyBindings(vm);
+
 })();
