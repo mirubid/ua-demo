@@ -3,7 +3,7 @@
     var products=[{
         'name': 'Premium Lister',
         'id': '20000',
-        'price': '',
+        'price': '50',
         'brand': 'LoopNet',
         'category': 'Listing Membership',
         'variant': 'Flexible PL',
@@ -14,7 +14,7 @@
     {
         'name': 'Diamond & Platinum Listings',
         'id': '20001',
-        'price': '',
+        'price': '75',
         'brand': 'LoopNet',
         'category': 'Pay per Listing Option',
         'variant': 'Diamond',
@@ -22,6 +22,13 @@
         'position': 2,
         'quantity':1
     }];
+    var checkoutSteps = [
+        { step: 1, name: 'Billing_Info' },
+        { step: 2, name: 'CC_Info' },
+        { step: 3, name: 'TC_Agreement' },
+        { step: 4, name: 'Complete_Purchase' },
+        { step: 5, name: 'Confirmation' }
+    ];
     function guid() {
         function _p8(s) {
             var p = (Math.random().toString(16) + "000000000").substr(2, 8);
@@ -33,14 +40,13 @@
     var uid = Math.floor((Math.random() * 1000000) + 1);
     var GUID = guid();
     var custom = [{ name: 'shoppingSessionKey', value: 'AID:' + uid + '-$$-' + GUID },
-        { name: 'salesChannel', value: 'ECOM' }
+        { name: 'salesChannel', value: 'TEST' }
     ];
     var vm = {
         GtmId: ko.observable(localStorage['gtm-id'] || ''),
         dataLayer:'dataLayer',
         uaInitialized: ko.observable(false),
-        initGtm: function () {
-            console.log('initGtm');
+        initGtm: function () {            
             if (!ko.unwrap(vm.GtmId)) { return; }
             customize(vm.gtm.payload);
             var rx = new RegExp('\\{1}','g');
@@ -71,67 +77,81 @@
         var f = document.getElementsByTagName(s)[0];
         f.parentNode.insertBefore(el, f)
     }
-    function gtmAction(name) {
-        console.log('action+=' + name);
+    function gtmAction(name) {        
         if (!vm.gtm.payload[name]) {
             vm.gtm.payload[name] = { products: [] };
         }
     }
+    function gtmEcomEvent(eventName,ecomName,products,callback) {
+        var d = { event: eventName, ecommerce: {} };
+        d.ecommerce[ecomName] = { products: products, actionField: {} };
+        
+        d.eventCallback = function () {
+            
+            vm.gtm.inc();
+            //console.log(arguments, this);(none,window)
+            if (typeof (callback) === 'function') { callback(); }
+
+        }
+        return d;
+    }
+    
     vm.gtm = {
+        txnId: ko.observable(guid()),
+        revenue: ko.observable('100'),
         payload: { eventCallback: function () { console.log('payload eventCallback'); }},
         impression: function () {
-
-            vm.gtm.payload.impressions = ko.utils.arrayMap(ko.toJS(ko.unwrap(vm.products)), function (v, i) { v.position = i; return v; });
-
+            var d = {
+                event:'ecom_impression',
+                ecommerce: {
+                impressions: ko.utils.arrayMap(ko.toJS(ko.unwrap(vm.products)), function (v, i) { v.position = i; return v; })
+            }};
+            //vm.gtm.payload.impressions = ko.utils.arrayMap(ko.toJS(ko.unwrap(vm.products)), function (v, i) { v.position = i; return v; });
+            dataLayer.push(d);
+            
             vm.gtm.inc();
         },
         clickProduct: function (product) {
-            
-            gtmAction('click');
-
-            vm.gtm.payload.click.products.push(ko.toJS(product));
-
-            dataLayer.push({ 'event': 'productClick' });
-            vm.gtm.inc();
+            dataLayer.push(gtmEcomEvent('ecom_productClick', 'click', [ko.toJS(product)]));
         },
-        productDetailView: function (product) {
+        productDetailView: function (product) {            
+            dataLayer.push(gtmEcomEvent('ecom_productDetailView','detail',[ko.toJS(product)]));            
             
-            gtmAction('detail');
-            vm.gtm.payload.detail.products.push(ko.toJS(product));
-            vm.gtm.inc();
         },
         addToCart: function (product) {
             
-            gtmAction('add');            
+            dataLayer.push(gtmEcomEvent('ecom_addToCart', 'add', [ko.toJS(product)]));
 
-            vm.gtm.payload.add.products.push(ko.toJS(product));
-            dataLayer.push({ 'event': 'addToCart' });
-            vm.gtm.inc();
         },
-        checkout:function(){
-            gtmAction('checkout');
-            vm.gtm.payload.checkout.products = ko.toJS(ko.unwrap(vm.products))
-            vm.gtm.inc();
+        checkout:function(co_step){
+            var event = gtmEcomEvent('ecom_checkout_'+co_step.name, 'checkout', ko.toJS(ko.unwrap(vm.products)));
+            event.ecommerce.checkout.actionField={step:co_step.step}
+            dataLayer.push(event);
         },
         purchase: function () {
-            gtmAction('purchase');
-
-            vm.gtm.payload.purchase.products = ko.toJS(ko.unwrap(vm.products))
-            vm.gtm.inc();
+            var event = gtmEcomEvent('ecom_purchase', 'purchase', ko.toJS(ko.unwrap(vm.products)));
+            event.ecommerce.purchase.actionField = { 'id': vm.gtm.txnId(), 'revenue': vm.gtm.revenue(), tax: '0', shipping: '0' };
+            dataLayer.push(event);
         },
         inc: function () { vm.gtm.count(vm.gtm.count()+1); },
-        count: ko.observable(0)
+        count: ko.observable(0),
+        setCustom: function () {
+            dataLayer.push(customize({}));
+            vm.gtm.inc();
+        }
     };
+    
     vm.dataLayerJson = ko.computed(function () {
         var c = vm.gtm.count();// just to make this update when something changes
         return ko.utils.arrayMap( dataLayer,function(v){return JSON.stringify(v);});
     });
-    vm.products =ko.mapping.fromJS(products);
+    vm.products = ko.mapping.fromJS(products);
+    vm.checkoutSteps = checkoutSteps;
     ko.utils.arrayForEach(ko.unwrap(vm.products), function (v) { v._clickCount = ko.observable(0);});
     vm.custom = custom;
     window.vm = vm;
     console.log(vm);
-    dataLayer.push({ "ecommerce": vm.gtm.payload });
+    //dataLayer.push({ "ecommerce": vm.gtm.payload });
     ko.applyBindings(vm);
 
 })();
