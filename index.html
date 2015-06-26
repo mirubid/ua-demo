@@ -22,8 +22,11 @@
     </div>
     <div>
         <h3>Custom Variables</h3>
-        <ul data-bind="foreach:custom" class="list-group">
+        <ul  class="list-group">
+            <li class="list-group-item">User Id:<input data-bind="value:uid" />UserId will be forwarded to UA via 'uid' Data Layer Variable</li>
+            <!-- ko foreach:custom -->
             <li class="list-group-item"><input data-bind="value:name" />:<input data-bind="value:value" /></li>
+            <!-- /ko -->
         </ul>
         <span>
             once custom variables are set, they will apply to any subsequent event. (so click this first, usually)
@@ -33,47 +36,47 @@
     <div  >
 
                 
-                <h3>ecommerce events</h3>
-                <span>These events assume there is a UA Event tag that will fire on any GTM event that begins with the string "ecom_" (i.e. match regex ^ecom_) </span>
-                <fieldset >
-                    <legend>products</legend>
-                    <button data-bind="click:gtm.impression" class="btn btn-default">trigger impressions</button>
-                    <div data-bind="foreach: products" class="container-fluid">
-                        <div class="row">
-                            <div data-bind="text:name" class="col-md-3"></div>
-                            <div class="col-md-3">
-                                <a href="javascript:void 0" data-bind="click:$root.gtm.clickProduct" class="btn btn-default">clickProduct </a>
-                            </div>
-                            <div class="col-md-3">
-                                <a href="javascript:void 0" data-bind="click:$root.gtm.productDetailView" class="btn btn-default">product detail view</a>
-                            </div>
-                            <div class="col-md-3">
-                                <a href="javascript:void 0" data-bind="click:$root.gtm.addToCart" class="btn btn-default">add to cart</a>
-                             </div>
-                        </div>
+    <h3>ecommerce events</h3>
+    <span>These events assume there is a UA Event tag that will fire on any GTM event that begins with the string "ecom_" (i.e. match regex ^ecom_) </span>
+    <fieldset >
+        <legend>products</legend>
+        <button data-bind="click:gtm.impression" class="btn btn-default">trigger impressions</button>
+        <div data-bind="foreach: products" class="container-fluid">
+            <div class="row">
+                <div data-bind="text:name" class="col-md-3"></div>
+                <div class="col-md-3">
+                    <a href="javascript:void 0" data-bind="click:$root.gtm.clickProduct" class="btn btn-default">clickProduct </a>
+                </div>
+                <div class="col-md-3">
+                    <a href="javascript:void 0" data-bind="click:$root.gtm.productDetailView" class="btn btn-default">product detail view</a>
+                </div>
+                <div class="col-md-3">
+                    <a href="javascript:void 0" data-bind="click:$root.gtm.addToCart" class="btn btn-default">add to cart</a>
                     </div>
-                </fieldset>
+            </div>
+        </div>
+    </fieldset>
         
                 
-                <fieldset><legend>checkout steps</legend>
-                <div class="container-fluid">
-                    <div class="row" data-bind="foreach:checkoutSteps">
-                        <div class="col-md-2"><a href="javascript:void 0" class="btn btn-default" data-bind="text:name,click:$root.gtm.checkout"></a></div>
-                    </div>
-                </div>
+    <fieldset><legend>checkout steps</legend>
+    <div class="container-fluid">
+        <div class="row" data-bind="foreach:checkoutSteps">
+            <div class="col-md-2"><a href="javascript:void 0" class="btn btn-default" data-bind="text:name,click:$root.gtm.checkout"></a></div>
+        </div>
+    </div>
                     
 
-                    <div data-bind="with:gtm" >
-                        <label>Txn Id<input data-bind="value:txnId" /></label>
-                        <label>Revenue<input data-bind="value:revenue"/></label>
-                        <button data-bind="click:purchase" class="btn btn-default">purchase</button>
-                    </div>
-                </fieldset>
+        <div data-bind="with:gtm" >
+            <label>Txn Id<input data-bind="value:txnId" /></label>
+            <label>Revenue<input data-bind="value:revenue"/></label>
+            <button data-bind="click:purchase" class="btn btn-default">purchase</button>
+        </div>
+    </fieldset>
                 
-                <h3>dataLayer</h3>
-                <ul data-bind="foreach:$root.dataLayerJson">
-                    <li><code data-bind="text:$data"></code></li>
-                </ul>
+    <h3>dataLayer</h3>
+    <ul data-bind="foreach:$root.dataLayerJson">
+        <li><code data-bind="text:$data"></code></li>
+    </ul>
 
 
     </div>
@@ -89,7 +92,7 @@
     // End Google Tag Manager -->
     </script>
 
-    <script src="//ajax.aspnetcdn.com/ajax/knockout/knockout-3.1.0.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/knockout/3.3.0/knockout-min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/knockout.mapping/2.4.1/knockout.mapping.min.js"></script>
     <script src="ua-demo.js"></script>
 </body>

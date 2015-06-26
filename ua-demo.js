@@ -44,6 +44,15 @@
     ];
     var vm = {
         GtmId: ko.observable(localStorage['gtm-id'] || ''),
+        uid: ko.pureComputed({
+            read:function(){return localStorage['uid'] || ''},
+            write: function (newValue) {
+                if (!newValue) { localStorage.removeItem('uid');return; }
+                localStorage['uid'] = newValue;
+                dataLayer.push({ 'uid': newValue });
+                vm.gtm.inc();
+            }
+        }),
         dataLayer:'dataLayer',
         uaInitialized: ko.observable(false),
         initGtm: function () {            
@@ -140,7 +149,9 @@
             vm.gtm.inc();
         }
     };
-    
+    if (vm.uid()) {
+        dataLayer.push({ 'uid': vm.uid() });
+    }
     vm.dataLayerJson = ko.computed(function () {
         var c = vm.gtm.count();// just to make this update when something changes
         return ko.utils.arrayMap( dataLayer,function(v){return JSON.stringify(v);});
@@ -149,9 +160,6 @@
     vm.checkoutSteps = checkoutSteps;
     ko.utils.arrayForEach(ko.unwrap(vm.products), function (v) { v._clickCount = ko.observable(0);});
     vm.custom = custom;
-    window.vm = vm;
-    console.log(vm);
-    //dataLayer.push({ "ecommerce": vm.gtm.payload });
     ko.applyBindings(vm);
 
 })();
