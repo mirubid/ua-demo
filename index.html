@@ -5,20 +5,28 @@
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-    <div data-bind ="ifnot:uaInitialized">
+    <div >
         <h3>Google Tag Manager</h3>
-        <div class="input-group"><label>GTM Id<input type="text" data-bind="value:GtmId" /></label></div>
-        <!--<div class="input-group"><label>Layer<input type="text" data-bind="value:dataLayer" /></label></div>-->
-        
         <div class="input-group">
-            click 'load gtm' to inject the Google Tag Manager startup script with the Id specified above.
-            events may be recorded before or after loading.
-            <br /><button data-bind="click:initGtm" class="btn btn-default">load gtm</button>
+            <label>GTM Id<input type="text" data-bind="value:GtmId" /></label>
+            <label>Layer Name<input type="text" data-bind="value:GtmLayerName" /></label>
+            <button data-bind="click:initGtm" class="btn btn-default">add layer</button>
+        </div>
+        <!--<div class="input-group"><label>Layer<input type="text" data-bind="value:dataLayer" /></label></div>-->
+        <ul class="list-inline" data-bind="foreach:dataLayers">
+            <li><button class="btn btn-default" data-bind="click:$root.selectDataLayer"><span data-bind="text:layerName"></span> (<span data-bind="text:id"></span>)</button></li>
+        </ul>
+        <div class="input-group">
+            click 'add layer' to inject the Google Tag Manager startup script with the Id and Layer Name specified above.
+            events may be recorded after loading.
+            
+            <br />
+            events recorded before loading will be recorded to the default, 'dataLayer'
         </div>
 
     </div>
     <div data-bind="if:uaInitialized">
-        <h3>GTM initialized.</h3>
+        <h3>Data Layer "<span data-bind="text:dataLayer"></span>" activated.</h3>
     </div>
     <div>
         <h3>Custom Variables</h3>
@@ -73,7 +81,7 @@
         </div>
     </fieldset>
                 
-    <h3>dataLayer</h3>
+    <h3>Data Layer <span data-bind="text:dataLayer"></span></h3>
     <ul data-bind="foreach:$root.dataLayerJson">
         <li><code data-bind="text:$data"></code></li>
     </ul>
@@ -87,22 +95,13 @@
     //Google Tag Manager
     (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
     new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='{1}'?'&l='+l:'';j.async=true;j.src=
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
     '//www.googletagmanager.com/gtm.js?zen=5&id='+i+dl;f.parentNode.insertBefore(j,f);
     })(window,document,'script','{1}','{0}');
         console.log('initialized');
     // End Google Tag Manager -->
     </script>
-    <script id="ua-startup-2" async>
-        //Google Tag Manager
-        (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-        new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-        j=d.createElement(s),dl=l!='{1}'?'&l='+l:'';j.async=true;j.src=
-        '//www.googletagmanager.com/gtm.js?zen=5&id='+i+dl;f.parentNode.insertBefore(j,f);
-        })(window, document, 'script', 'ecomDataLayer', 'GTM-WMLDJL');
-        console.log('initialized');
-        // End Google Tag Manager -->
-    </script>
+    
     <script src="//cdnjs.cloudflare.com/ajax/libs/knockout/3.3.0/knockout-min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/knockout.mapping/2.4.1/knockout.mapping.min.js"></script>
     <script src="ua-demo.js"></script>

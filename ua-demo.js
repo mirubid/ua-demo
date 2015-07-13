@@ -43,6 +43,7 @@
         { name: 'salesChannel', value: 'TEST' }
     ];
     var vm = {
+        GtmLayerName: 'dataLayer',
         GtmId: ko.observable(localStorage['gtm-id'] || ''),
         uid: ko.pureComputed({
             read:function(){return localStorage['uid'] || ''},
@@ -53,26 +54,36 @@
                 vm.gtm.inc();
             }
         }),
-        dataLayer:'dataLayer',
+        dataLayers:ko.observableArray([]),
+        dataLayer:ko.observable(),
         uaInitialized: ko.observable(false),
-        initGtm: function () {            
-            if (!ko.unwrap(vm.GtmId)) { return; }
-            customize(vm.gtm.payload);
-            var rx = new RegExp('\\{1}','g');
+        initGtm: function () {
+
+            if (!ko.unwrap(vm.GtmId) || ! ko.unwrap(vm.GtmLayerName)) { return; }
+            if (ko.utils.arrayFirst(vm.dataLayers(), function (item) { return item.layerName == vm.GtmLayerName })) { return; }
+
+            vm.dataLayers.push({ layerName: vm.GtmLayerName, id: vm.GtmId });
+
+            
+            
             var js = document.getElementById('ua-startup').text
                 .replace('{0}', ko.unwrap(vm.GtmId))
-                .replace(rx, ko.unwrap(vm.dataLayer));
+                .replace('{1}', ko.unwrap(vm.GtmLayerName));
             injectScript('script', js);            
             vm.uaInitialized(true);
             localStorage['gtm-id'] = ko.unwrap(vm.GtmId);
+            vm.dataLayer(vm.GtmLayerName);
         },
-        
+        selectDataLayer: function (layer) {
+            if (!layer) { return; }
+            vm.dataLayer(layer.layerName);
+        },
         ga: {
-
+            
         }
     };
     function dl() {
-        return window[ko.unwrap(vm.dataLayer)];
+        return window[ko.unwrap(vm.dataLayer)] || [];
     }
 
     function customize(payload) {
@@ -116,45 +127,45 @@
                 impressions: ko.utils.arrayMap(ko.toJS(ko.unwrap(vm.products)), function (v, i) { v.position = i; return v; })
             }};
             //vm.gtm.payload.impressions = ko.utils.arrayMap(ko.toJS(ko.unwrap(vm.products)), function (v, i) { v.position = i; return v; });
-            dataLayer.push(d);
+            dl().push(d);
             
             vm.gtm.inc();
         },
         clickProduct: function (product) {
-            dataLayer.push(gtmEcomEvent('ecom_productClick', 'click', [ko.toJS(product)]));
+            dl().push(gtmEcomEvent('ecom_productClick', 'click', [ko.toJS(product)]));
         },
         productDetailView: function (product) {            
-            dataLayer.push(gtmEcomEvent('ecom_productDetailView','detail',[ko.toJS(product)]));            
+            dl().push(gtmEcomEvent('ecom_productDetailView','detail',[ko.toJS(product)]));            
             
         },
         addToCart: function (product) {
             
-            dataLayer.push(gtmEcomEvent('ecom_addToCart', 'add', [ko.toJS(product)]));
+            dl().push(gtmEcomEvent('ecom_addToCart', 'add', [ko.toJS(product)]));
 
         },
         checkout:function(co_step){
             var event = gtmEcomEvent('ecom_checkout_'+co_step.name, 'checkout', ko.toJS(ko.unwrap(vm.products)));
             event.ecommerce.checkout.actionField={step:co_step.step}
-            dataLayer.push(event);
+            dl().push(event);
         },
         purchase: function () {
             var event = gtmEcomEvent('ecom_purchase', 'purchase', ko.toJS(ko.unwrap(vm.products)));
             event.ecommerce.purchase.actionField = { 'id': vm.gtm.txnId(), 'revenue': vm.gtm.revenue(), tax: '0', shipping: '0' };
-            dataLayer.push(event);
+            dl().push(event);
         },
         inc: function () { vm.gtm.count(vm.gtm.count()+1); },
         count: ko.observable(0),
         setCustom: function () {
-            dataLayer.push(customize({}));
+            dl().push(customize({}));
             vm.gtm.inc();
         }
     };
     if (vm.uid()) {
-        dataLayer.push({ 'uid': vm.uid() });
+        dl().push({ 'uid': vm.uid() });
     }
     vm.dataLayerJson = ko.computed(function () {
         var c = vm.gtm.count();// just to make this update when something changes
-        return ko.utils.arrayMap( dataLayer,function(v){return JSON.stringify(v);});
+        return ko.utils.arrayMap( dl(), function(v){return JSON.stringify(v);});
     });
     vm.products = ko.mapping.fromJS(products);
     vm.checkoutSteps = checkoutSteps;
